@@ -28,14 +28,13 @@ Apply for a non-commercial API key from the [Remember The Milk API key page](htt
 
 ### 2. Set environment variables
 
-Add your API key and Shared Secret to `mise.toml`.
+Set the following environment variables with your API key and Shared Secret.
 
-```toml
-[env]
-RTM_API_KEY = "your_api_key"
-RTM_SHARED_SECRET = "your_shared_secret"
-RTM_AUTH_TOKEN = ""
-```
+| Variable | Description |
+|---|---|
+| `RTM_API_KEY` | Your API application key |
+| `RTM_SHARED_SECRET` | Your API shared secret |
+| `RTM_AUTH_TOKEN` | Auth token (obtained in step 3) |
 
 ### 3. Authenticate
 
@@ -43,7 +42,7 @@ RTM_AUTH_TOKEN = ""
 go run ./cmd/auth
 ```
 
-Follow the browser prompt to authorize the app, then set the displayed token as `RTM_AUTH_TOKEN` in `mise.toml`.
+Follow the browser prompt to authorize the app, then set the displayed token as `RTM_AUTH_TOKEN`.
 
 ## Usage
 
