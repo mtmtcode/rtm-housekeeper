@@ -3,6 +3,7 @@ package housekeeper
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/mtmtcode/rtm-housekeeper/rtm"
 )
@@ -11,13 +12,15 @@ const archiveListName = "archive"
 
 // Housekeeper performs maintenance tasks on RTM.
 type Housekeeper struct {
-	client *rtm.Client
-	dryRun bool
+	client       *rtm.Client
+	dryRun       bool
+	somedayLists []string
+	staleDays    int
 }
 
 // New creates a new Housekeeper.
-func New(client *rtm.Client, dryRun bool) *Housekeeper {
-	return &Housekeeper{client: client, dryRun: dryRun}
+func New(client *rtm.Client, dryRun bool, somedayLists []string, staleDays int) *Housekeeper {
+	return &Housekeeper{client: client, dryRun: dryRun, somedayLists: somedayLists, staleDays: staleDays}
 }
 
 // Run executes all housekeeper tasks.
@@ -31,8 +34,10 @@ func (h *Housekeeper) Run() error {
 		}
 	}
 
-	if err := h.archiveSomeday(timeline); err != nil {
-		return fmt.Errorf("archive someday: %w", err)
+	for _, list := range h.somedayLists {
+		if err := h.archiveSomeday(timeline, list); err != nil {
+			return fmt.Errorf("archive someday (%s): %w", list, err)
+		}
 	}
 
 	if err := h.archiveTagged(timeline); err != nil {
@@ -46,22 +51,23 @@ func (h *Housekeeper) Run() error {
 	return nil
 }
 
-// archiveSomeday moves stale someday tasks to the archive list.
-func (h *Housekeeper) archiveSomeday(timeline string) error {
-	filter := `list:someday AND status:incomplete AND updatedBefore:"60 days ago"`
+// archiveSomeday moves stale tasks in the given list to the archive list.
+func (h *Housekeeper) archiveSomeday(timeline, listName string) error {
+	cutoff := time.Now().AddDate(0, 0, -h.staleDays).Format("2006-01-02")
+	filter := fmt.Sprintf(`list:"%s" AND status:incomplete AND updatedBefore:"%s"`, listName, cutoff)
 	tasks, err := h.collectTasks(filter)
 	if err != nil {
 		return err
 	}
 
 	if len(tasks) == 0 {
-		log.Println("[someday] no tasks to archive")
+		log.Printf("[someday:%s] no tasks to archive", listName)
 		return nil
 	}
 
-	log.Printf("[someday] found %d task(s) to archive", len(tasks))
+	log.Printf("[someday:%s] found %d task(s) to archive", listName, len(tasks))
 	for _, t := range tasks {
-		log.Printf("[someday]   - %s", t.Name)
+		log.Printf("[someday:%s]   - %s", listName, t.Name)
 	}
 
 	if h.dryRun {
@@ -77,7 +83,7 @@ func (h *Housekeeper) archiveSomeday(timeline string) error {
 		if err := h.client.MoveTo(timeline, t, archiveListID); err != nil {
 			return fmt.Errorf("move task %q: %w", t.Name, err)
 		}
-		log.Printf("[someday] archived: %s", t.Name)
+		log.Printf("[someday:%s] archived: %s", listName, t.Name)
 	}
 
 	return nil

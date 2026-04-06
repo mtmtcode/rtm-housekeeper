@@ -6,7 +6,7 @@ A CLI tool that automatically organizes tasks in [Remember The Milk](https://www
 
 ### Archive stale someday tasks
 
-Moves incomplete tasks in the `someday` list that haven't been updated for more than 60 days to the `archive` list.
+Moves incomplete tasks in the specified lists that haven't been updated for a given number of days (default: 60) to the `archive` list. Target lists and the threshold can be configured via flags.
 
 ### Archive tagged tasks
 
@@ -52,7 +52,21 @@ go run .
 
 # Dry run (shows affected tasks without making changes)
 go run . -dry-run
+
+# Specify multiple someday lists
+go run . -someday-lists someday,work_someday
+
+# Change the stale threshold (default: 60 days)
+go run . -stale-days 30
 ```
+
+### Flags
+
+| Flag | Default | Description |
+|---|---|---|
+| `-dry-run` | `false` | Show affected tasks without making changes |
+| `-someday-lists` | `someday` | Comma-separated list names to auto-archive stale tasks from |
+| `-stale-days` | `60` | Number of days since last update to consider a task stale |
 
 ## License
 

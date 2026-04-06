@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/mtmtcode/rtm-housekeeper/housekeeper"
 	"github.com/mtmtcode/rtm-housekeeper/rtm"
@@ -12,7 +13,11 @@ import (
 
 func main() {
 	dryRun := flag.Bool("dry-run", false, "show tasks that would be affected without making changes")
+	somedayFlag := flag.String("someday-lists", "someday", "comma-separated list names to auto-archive stale tasks from")
+	staleDays := flag.Int("stale-days", 60, "number of days since last update to consider a task stale")
 	flag.Parse()
+
+	somedayLists := strings.Split(*somedayFlag, ",")
 
 	apiKey := os.Getenv("RTM_API_KEY")
 	sharedSecret := os.Getenv("RTM_SHARED_SECRET")
@@ -29,7 +34,7 @@ func main() {
 	}
 
 	client := rtm.NewClient(apiKey, sharedSecret, authToken)
-	h := housekeeper.New(client, *dryRun)
+	h := housekeeper.New(client, *dryRun, somedayLists, *staleDays)
 
 	if err := h.Run(); err != nil {
 		log.Fatalf("error: %v", err)
