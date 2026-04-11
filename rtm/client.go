@@ -224,3 +224,15 @@ func (c *Client) DeleteTask(timeline string, info TaskInfo) error {
 	})
 	return err
 }
+
+// RemoveTag removes tags from a task.
+func (c *Client) RemoveTag(timeline string, info TaskInfo, tags string) error {
+	_, err := c.call("rtm.tasks.removeTags", map[string]string{
+		"timeline":      timeline,
+		"list_id":       info.ListID,
+		"taskseries_id": info.TaskSeriesID,
+		"task_id":       info.TaskID,
+		"tags":          tags,
+	})
+	return err
+}
